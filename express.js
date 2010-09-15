@@ -6,13 +6,14 @@ var express = require('express'),
     YUI = require('yui3').YUI;
 
 
-YUI({ debug: false, filter: 'min' }).use('express', 'node', function(Y) {
+YUI({ debug: false, filter: 'debug' }).use('express', 'node', function(Y) {
 
     var app = express.createServer();
 
     app.configure(function(){
         app.use(express.methodOverride());
         app.use(express.bodyDecoder());
+        app.use(express.cookieDecoder());        
         app.use(app.router);
         app.use(express.staticProvider(__dirname + '/assets'));
     });
@@ -28,53 +29,9 @@ YUI({ debug: false, filter: 'min' }).use('express', 'node', function(Y) {
         }
     ];
 
-    app.configure(function() {
-        YUI.domRoot.yui2 = '/2in3/';
-        YUI.domRoot.yui3 = '/yui3/';
-    });
-
-    app.get('/yui3/'+'*', function(req, res) {
-        var file = req.params[0];
-        var base = Y.config.base;
-        var filePath = path.join(base, file);
-
-        if (filePath.indexOf('.css') > -1) { //We need to "rewrite" the CSS paths here
-            fs.readFile(filePath, encoding='utf8', function(err, data) {
-                if (data) {
-                    var regEx = new RegExp(Y.config.domBase, 'gi');
-                    data = data.replace(regEx, '/yui3/');
-                } else {
-                    data = '';
-                }
-                res.contentType(filePath);
-                res.send(data);
-            });
-        } else {
-            res.sendfile(filePath);
-        }
-        
-    });
-
-    app.get('/2in3/'+'*', function(req, res) {
-        var file = req.params[0];
-        var base = Y.config.groups.yui2.base;
-        var filePath = path.join(base, file);
-
-        if (filePath.indexOf('.css') > -1) { //We need to "rewrite" the CSS paths here
-            fs.readFile(filePath, encoding='utf8', function(err, data) {
-                if (data) {
-                    var regEx = new RegExp(Y.config.groups.yui2.domBase.replace('2in3.3/', ''), 'gi');
-                    data = data.replace(regEx, '/2in3/');
-                } else {
-                    data = '';
-                }
-                res.contentType(filePath);
-                res.send(data);
-            });
-        } else {
-            res.sendfile(filePath);
-        }
-        
+    YUI.configure(app, {
+        yui2: '/yui2/',
+        yui3: '/yui3/'
     });
 
     app.get('/', function(req, res){
@@ -85,7 +42,7 @@ YUI({ debug: false, filter: 'min' }).use('express', 'node', function(Y) {
                     title: 'YUI/Express JS Demo'
                 },
                 after: function(Y, options, partial) {
-                    Y.one('title').set('innerHTML', 'Home Page');
+                    Y.one('title').set('innerHTML', 'Home Page: Hello Word');
                 }
             }
         });
@@ -220,6 +177,22 @@ YUI({ debug: false, filter: 'min' }).use('express', 'node', function(Y) {
                 el.id = 'basic';
                 document.body.appendChild(el);
 
+                var config = {},
+                    sortCol = 'date',
+                    sortDir = 'desc';
+        
+                if (req.query.col) {
+                    sortCol = req.query.col;
+                }
+                if (req.query.dir) {
+                    sortDir = req.query.dir;
+                }
+
+                config.sortedBy = {
+                    key: sortCol,
+                    dir: ((sortDir == 'asc') ? YAHOO.widget.DataTable.CLASS_ASC : YAHOO.widget.DataTable.CLASS_DESC)
+                };
+
                 YAHOO.example.Data = {
                     bookorders: [
                         {id:"po-0167", date:new Date(1980, 2, 24), quantity:1, amount:4, title:"A Book About Nothing"},
@@ -228,6 +201,21 @@ YUI({ debug: false, filter: 'min' }).use('express', 'node', function(Y) {
                         {id:"po-1482", date:new Date("March 11, 1985"), quantity:6, amount:3.5, title:"Read Me Twice"}
                     ]
                 };
+                var aReturn = -1, bReturn = 1;
+                if (sortDir == 'desc') {
+                    aReturn = 1;
+                    bReturn = -1;
+                }
+                YAHOO.example.Data.bookorders.sort(function(a, b) {
+                    var A = a[sortCol], B = b[sortCol];
+                    if (A < B) {//sort string ascending
+                        return aReturn;
+                    }
+                    if (A > B) {
+                        return bReturn;
+                    }
+                    return 0 //default return value (no sorting)
+                });
                 
                 
                 var myColumnDefs = [
@@ -249,28 +237,16 @@ YUI({ debug: false, filter: 'min' }).use('express', 'node', function(Y) {
 
                 Y.log('Creating DataTable..');
 
-                var config = {},
-                    sortCol = 'date';
-        
-                if (req.query.col) {
-                    sortCol = req.query.col;
-                }
-
-                config.sortedBy = {
-                    key: sortCol,
-                    dir: YAHOO.widget.DataTable.CLASS_ASC
-                };
 
                 var myDataTable = new YAHOO.widget.DataTable("basic", myColumnDefs, myDataSource, config);
-
                 myDataTable.on('renderEvent', function() {
-                    
-                    var headers = page.all('#basic thead th a');
+                    var headers = page.all('#basic thead th a'),
+                    dir = ((sortDir == 'desc') ? 'asc' : 'desc');
+
                     headers.each(function(n) {
                         var col = n.get('href').replace('yui-dt0-href-', '');
-                        n.set('href', '/datatable?col=' + col);
+                        n.set('href', '/datatable?col=' + col + '&dir=' + dir);
                     });
-                    
 
                     res.render('datatable.html', {
                         locals: {
@@ -288,8 +264,6 @@ YUI({ debug: false, filter: 'min' }).use('express', 'node', function(Y) {
                     });
                     
                 });
-                
-            
             });        
         });        
     });
@@ -357,8 +331,33 @@ YUI({ debug: false, filter: 'min' }).use('express', 'node', function(Y) {
         });
     });
 
+    app.get('/notice', function(req, res) {
+        res.render('index.html', {
+            locals: {
+                content: '#content',
+                sub: {
+                    title: 'This is a notice'
+                },
+                after: function(Y) {
+                    Y.one('#content').set('innerHTML', '<h1>Hello World, how are you?</h1>');
+                    Y.one('#nav').remove();
+                    Y.one('#doc').replaceClass('yui-t1', 'yui-t7');
+                }
+            }
+        });
+    });
+
     app.get('/tabview', function(req, res) {
-        YUI().use('tabview', function(page) {
+
+        var selectedTab = 0;
+        if (req.cookies.tabview) {
+            selectedTab = req.cookies.tabview;
+        }
+        if (req.query.tab > -1) {
+            selectedTab = req.query.tab;
+        }
+
+        YUI().use('tabview', 'yql', function(page) {
             var div = page.Node.create('<div id="demo"></div>');
             page.one('body').addClass('yui3-skin-sam').appendChild(div);
             
@@ -375,12 +374,20 @@ YUI({ debug: false, filter: 'min' }).use('express', 'node', function(Y) {
                     content: '<p>baz content</p>'
                 }]
             });
+            
             tabview.render('#demo');
+            var as = page.all('#demo .yui3-tab-label');
+            as.each(function(v, k) {
+                v.set('href', '/tabview?tab=' + k);
+            });
+            if (selectedTab) {
+                tabview.selectChild(selectedTab);
+            }
 
             res.render('tabview.html', {
                 locals: {
                     instance: page,
-                    use: ['tabview'],
+                    use: ['tabview', 'cookie'],
                     //filter: 'debug',
                     content: '#content',
                     sub: {
@@ -394,6 +401,49 @@ YUI({ debug: false, filter: 'min' }).use('express', 'node', function(Y) {
                     }
                 }
             });
+        });
+    });
+
+    app.get('/github/:id?', function(req, res) {
+        var sql = "select * from github.repo.network where id='yui' and repo='yui3'";
+        if (req.params.id) {
+            sql = Y.Lang.sub("select * from github.user.info where id='{id}'", req.params);
+        }
+        
+        YUI().use('yql', 'node', function(page) {
+            var title = 'Github Followers';
+            page.YQL(sql, function(r) {
+                if (r.query.results.user) {
+                    var parts = res.partial('github_member.html');
+                    title = r.query.results.user.name;
+                    parts = page.Lang.sub(parts, r.query.results.user);
+                    page.one('body').append(parts);
+                } else {
+                    var parts = res.partial('github_list.html');
+                    var ul = page.Node.create('<ul></ul>');
+                    page.one('body').append(ul);
+                    page.each(r.query.results.network.network, function(d) {
+                        ul.append(page.Lang.sub(parts, d));
+                    });
+                }
+
+                res.render('github.html', {
+                    locals: {
+                        instance: page,
+                        content: '#content',
+                        sub: {
+                            title: 'YUI3 Github Network'
+                        },
+                        after: function(Y) {
+                            Y.one('title').set('innerHTML', 'YUI3 Github Network');
+                            Y.one('#content h1').set('innerHTML', title);
+                            Y.all('#nav li').removeClass('selected');
+                            Y.one('#nav li.github').addClass('selected');
+                        }
+                    }
+                });
+            });
+
         });
     });
 
