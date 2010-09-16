@@ -3,10 +3,11 @@
 var express = require('express'),
     path = require('path'),
     fs = require('fs'),
-    YUI = require('yui3').YUI;
+    YUI = require('yui3').YUI,
+    DEBUG = true;
 
 
-YUI({ debug: false, filter: 'debug' }).use('express', 'node', function(Y) {
+YUI({ debug: false }).use('express', 'node', function(Y) {
 
     var app = express.createServer();
 
@@ -17,6 +18,16 @@ YUI({ debug: false, filter: 'debug' }).use('express', 'node', function(Y) {
         app.use(app.router);
         app.use(express.staticProvider(__dirname + '/assets'));
     });
+
+    app.configure('development', function(){
+        DEBUG = true;
+    });
+
+    app.configure('production', function(){
+        DEBUG = false;
+    });
+        
+
 
     app.get('/combo', YUI.combo);
 
@@ -97,7 +108,7 @@ YUI({ debug: false, filter: 'debug' }).use('express', 'node', function(Y) {
     });
 
     app.get('/calendar', function(req, res) {
-        YUI().use('node', function(page) {
+        YUI({ debug: DEBUG }).use('node', function(page) {
             window = page.Browser.window;
             document = page.Browser.document;
             navigator = page.Browser.navigator;
@@ -164,7 +175,7 @@ YUI({ debug: false, filter: 'debug' }).use('express', 'node', function(Y) {
     });
 
     app.get('/datatable', function(req, res) {
-        YUI().use('node', function(page) {
+        YUI({ debug: DEBUG }).use('node', function(page) {
             window = page.Browser.window;
             document = page.Browser.document;
             navigator = page.Browser.navigator;
@@ -271,7 +282,7 @@ YUI({ debug: false, filter: 'debug' }).use('express', 'node', function(Y) {
     var diggCache = null;
 
     app.get('/digg', function(req, res) {
-        YUI().use('node', 'io', function(page) {
+        YUI({ debug: DEBUG }).use('node', 'io', function(page) {
             var ul = page.one('body').addClass('digg').appendChild(page.Node.create('<ul></ul>'));
 
             var sendRequest = function() {
@@ -297,7 +308,7 @@ YUI({ debug: false, filter: 'debug' }).use('express', 'node', function(Y) {
                 sendRequest();
             } else {
                 //console.log('Fetching News');
-                YUI().use('node', function(remotePage) {
+                YUI({ debug: DEBUG }).use('node', function(remotePage) {
                     
                     var url = 'http://digg.com/news';
                     
@@ -357,7 +368,7 @@ YUI({ debug: false, filter: 'debug' }).use('express', 'node', function(Y) {
             selectedTab = req.query.tab;
         }
 
-        YUI().use('tabview', 'yql', function(page) {
+        YUI({ debug: DEBUG }).use('tabview', 'yql', function(page) {
             var div = page.Node.create('<div id="demo"></div>');
             page.one('body').addClass('yui3-skin-sam').appendChild(div);
             
@@ -410,7 +421,7 @@ YUI({ debug: false, filter: 'debug' }).use('express', 'node', function(Y) {
             sql = Y.Lang.sub("select * from github.user.info where id='{id}'", req.params);
         }
         
-        YUI().use('yql', 'node', function(page) {
+        YUI({ debug: DEBUG }).use('yql', 'node', function(page) {
             var title = 'Github Followers';
             page.YQL(sql, function(r) {
                 if (r.query.results.user) {
