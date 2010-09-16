@@ -1,0 +1,17 @@
+This is the source code for: http://express.davglass.com/
+
+You must have git, NodeJS 0.2.1 and npm 0.2.0 installed
+
+To use it, follow these simple steps:
+
+npm install yui3
+npm install yui3-gallery
+npm install yui3-2in3
+
+git clone git://github.com/davglass/yui-express.git
+
+cd yui-express
+
+./express.js
+
+Visit: http://localhost:3200/
