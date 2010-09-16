@@ -1,5 +1,9 @@
 #!/usr/bin/env node
 
+//Needed for monit/upstart
+//Change directory into the script directory so includes resolve
+process.chdir(__dirname);
+
 var express = require('express'),
     path = require('path'),
     fs = require('fs'),
