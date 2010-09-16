@@ -11,10 +11,17 @@ var express = require('express'),
     DEBUG = true;
 
 
+/**
+* Create the external instance that will host our "express" server.
+* For a performance gain, you can "use" common modules here, so they 
+* are available when a new instance is created per request.
+*/
 YUI({ debug: false }).use('express', 'node', function(Y) {
-
+    
+    //Create the express application
     var app = express.createServer();
-
+    
+    //Configure it with some simple configuration options.
     app.configure(function(){
         app.use(express.methodOverride());
         app.use(express.bodyDecoder());
@@ -22,20 +29,56 @@ YUI({ debug: false }).use('express', 'node', function(Y) {
         app.use(app.router);
         app.use(express.staticProvider(__dirname + '/assets'));
     });
-
+    
+    //Set the development environment to debug, so YUI modues echo log statements
     app.configure('development', function(){
         DEBUG = true;
     });
-
+    //Set the production environment to halt all debug logs.
     app.configure('production', function(){
         DEBUG = false;
     });
         
-
-
+    /**
+    * This version of the YUIExpress engine comes with a simple YUI combo handler
+    * So you can put "use" inside your locals var on render:
+    *
+    * res.render('index.html', {
+    *       locals: {
+    *           use: ['dd', 'tabview']
+    *       }
+    * });
+    *
+    * This will load a URL into the page like this:
+    * <script src="/combo?dd&tabview"></script>
+    *
+    * Note, currently it has to be "/combo", the internal renderer doesn't
+    * know what you set this to. Eventually we can add it to YUI.configure.
+    */
     app.get('/combo', YUI.combo);
-
+    
+    /**
+    * This is the "black magic" part. This tells Express to use YUI to render
+    * all HTML pages
+    */
     app.register('.html', YUI);
+    //The same as other Express View Engines
+    //app.register('.html', require('jade'));
+    //app.register('.haml', require('haml-js'));
+
+    
+    /**
+    * These partials will be added to every page served by YUI, good for templating.
+    * They can be added to by locals.partials on a per page basis. A partial looks like this:
+    * {
+    *   name: 'header', //Name of the /views/partial/{name}.html file to load
+    *   method: 'append', //append,prepend,appendChild
+    *   node: '#conent', //Any valid selector
+    *   enum: 'one', //one,all
+    *   fn: function //The callback function to run after the action.
+    * }
+    * Defaults to enum: "one" and method: "append"
+    */
 
     YUI.partials = [
         {
@@ -44,35 +87,79 @@ YUI({ debug: false }).use('express', 'node', function(Y) {
         }
     ];
 
+    /**
+    * YUI.configure allows you to configure routes for the yui2 & yui3 assests.
+    * With this config you will serve yui2 assets from /yui2/ and yui3 assets from
+    * /yui3
+    * 
+    */
     YUI.configure(app, {
         yui2: '/yui2/',
         yui3: '/yui3/'
     });
 
-    app.get('/', function(req, res){
+    /**
+    * The route controller for the default page: /
+    * This is a simple example of serving a static HTML page with a little
+    * Javascript to enhance the page.
+    */
+    app.get('/', function(req, res) {
+        //Render from ./views/index.html
         res.render('index.html', {
+            //Locals used by the YUI renderer
             locals: {
+                /**
+                * This is the content placeholder in your ./views/layout.html file.
+                * The content of index.html will be inserted here.
+                */
                 content: '#content',
+                /**
+                * Standard object hash to be passed to Y.Lang.sub after the
+                * content has been loaded, but before it's inserted into the YUI
+                * instance on render.
+                */
                 sub: {
                     title: 'YUI/Express JS Demo'
                 },
+                /**
+                * The after method will be invoked after the layout.html file
+                * has been loaded into the instance. This allows you to change
+                * the total layout, after all the peices have been assembled.
+                */
                 after: function(Y, options, partial) {
                     Y.one('title').set('innerHTML', 'Home Page: Hello Word');
                 }
             }
         });
     });
-
+    
+    /**
+    * Pages 1, 2 & 3 are all the same HTML page template.
+    * The simply change the content of that page after it's
+    * loaded into the YUI instance. They use some of the same 
+    * properties as the one above, only they also use the "before" method.
+    */
     app.get('/one', function(req, res){
-        res.render('one.html', {
+        res.render('same.html', {
             locals: {
                 content: '#content',
                 sub: {
                     title: 'YUI/Express JS Demo'
                 },
+                /**
+                * The before method is similar to the "after" method, only it's action is to
+                * only deal with the content of the partial that was loaded. It allows you
+                * to modify the partials HTML after that template was loaded into an instance.
+                */
+                before: function(Y) {
+                    Y.one('h1').set('innerHTML', 'Welcome to Page #1');
+                },
                 after: function(Y, options, partial) {
+                    //Set the title of the page
                     Y.one('title').set('innerHTML', 'Page #1');
+                    //Update the nav and remove all selected nav items
                     Y.all('#nav li').removeClass('selected');
+                    //Grab the one for page one and add selected.
                     Y.one('#nav li.one').addClass('selected');
                 }
             }
@@ -80,11 +167,14 @@ YUI({ debug: false }).use('express', 'node', function(Y) {
     });
 
     app.get('/two', function(req, res){
-        res.render('two.html', {
+        res.render('same.html', {
             locals: {
                 content: '#content',
                 sub: {
                     title: 'YUI/Express JS Demo'
+                },
+                before: function(Y) {
+                    Y.one('h1').set('innerHTML', 'Welcome to Page #2');
                 },
                 after: function(Y, options, partial) {
                     Y.one('title').set('innerHTML', 'Page #2');
@@ -96,11 +186,14 @@ YUI({ debug: false }).use('express', 'node', function(Y) {
     });
 
     app.get('/three', function(req, res){
-        res.render('three.html', {
+        res.render('same.html', {
             locals: {
                 content: '#content',
                 sub: {
                     title: 'YUI/Express JS Demo'
+                },
+                before: function(Y) {
+                    Y.one('h1').set('innerHTML', 'Welcome to Page #3');
                 },
                 after: function(Y, options, partial) {
                     Y.one('title').set('innerHTML', 'Page #3');
@@ -110,176 +203,42 @@ YUI({ debug: false }).use('express', 'node', function(Y) {
             }
         });
     });
-
+    
+    /**
+    * This handler does a couple special things.
+    *   Uses an external module (CODE REUSE)
+    *   Uses YUI2
+    *   Handles user action from requests
+    */
     app.get('/calendar', function(req, res) {
-        YUI({ debug: DEBUG }).use('node', function(page) {
-            window = page.Browser.window;
-            document = page.Browser.document;
-            navigator = page.Browser.navigator;
-
-            page.one('body').append(page.Node.create('<div id="calCont"></div>'));
-            page.one('body').addClass('yui-skin-sam');
-            page.use('yui2-calendar', function() {
-                var YAHOO = page.YUI2,
-                    config = {};
-
-                if (req.query) {
-                    var q = req.query;
-                    if (q.day && q.month && q.year) {
-                        config.pagedate = q.month + '/' + q.year;
-                        config.selected = q.month + '/' + q.day + '/' + q.year;
-                    }
-                    if (q.page) {
-                        config.pagedate = q.page;
-                    }
+        YUI({
+            debug: DEBUG,
+            modules: {
+                'local-cal': {
+                    //For more detail see this file..
+                    fullpath: __dirname + '/modules/local-cal.js'
                 }
-                
-                var cal1 = new YAHOO.widget.Calendar('cal', "calCont", config);
-                cal1.HIDE_BLANK_WEEKS = true;
-                cal1.renderEvent.subscribe(function() {
-                    var pageDate = cal1.cfg.getProperty('pagedate');
-                    var next = YAHOO.widget.DateMath.add(pageDate, 'M', 1);
-                    var prev = YAHOO.widget.DateMath.subtract(pageDate, 'M', 1);
-                    next = (next.getMonth() + 1) + '/' + next.getFullYear();
-                    prev = (prev.getMonth() + 1) + '/' + prev.getFullYear();
-
-                    //Fix up the dom
-                    page.one('#cal .calheader .calnavright').set('href', '/calendar?page=' + next);
-                    page.one('#cal .calheader .calnavleft').set('href', '/calendar?page=' + prev);
-                    var as = page.all('#cal .calcell a');
-                    page.log('Found: ' + as.size());
-                    as.each(function(node) {
-                        node.set('href', '/calendar/?month=' + (pageDate.getMonth() + 1) + '&year=' + pageDate.getFullYear() + '&day=' + node.get('innerHTML'));
-                    });
-
-                    var oom = page.all('#cal .calcell.oom');
-                    oom.set('innerHTML', '');
-
-                    Y.log('Done..');
-                });
-                cal1.render();
-
-
-                res.render('calendar.html', {
-                    locals: {
-                        instance: page,
-                        content: '#content',
-                        sub: {
-                            title: 'YUI/Express JS Demo'
-                        },
-                        after: function(Y, options, partial) {
-                            Y.one('title').set('innerHTML', 'YUI 2 Calendar');
-                            Y.all('#nav li').removeClass('selected');
-                            Y.one('#nav li.calendar').addClass('selected');
-                        }
-                    }
-                });
-            });
+            }
+        }).use('node', 'local-cal', function(page) {
+            //Calling a method inside an external module
+            page.localCal(req, res);
         });
     });
-
+    /**
+    * This handler is similar to the /calendar, but it renders a DataTable instead.
+    */
     app.get('/datatable', function(req, res) {
-        YUI({ debug: DEBUG }).use('node', function(page) {
-            window = page.Browser.window;
-            document = page.Browser.document;
-            navigator = page.Browser.navigator;
-            page.one('body').addClass('yui-skin-sam');
-
-            page.use('yui2-datatable', 'yui2-datasource', function() {
-                var YAHOO = page.YUI2;
-
-                var el = document.createElement('div');
-                el.id = 'basic';
-                document.body.appendChild(el);
-
-                var config = {},
-                    sortCol = 'date',
-                    sortDir = 'desc';
-        
-                if (req.query.col) {
-                    sortCol = req.query.col;
+        YUI({
+            debug: DEBUG,
+            modules: {
+                'local-dt': {
+                    fullpath: __dirname + '/modules/local-dt.js'
                 }
-                if (req.query.dir) {
-                    sortDir = req.query.dir;
-                }
+            },
+        }).use('node', 'local-dt', function(page) {
+            //Calling a method inside an external module
+            page.localDT(req, res);
 
-                config.sortedBy = {
-                    key: sortCol,
-                    dir: ((sortDir == 'asc') ? YAHOO.widget.DataTable.CLASS_ASC : YAHOO.widget.DataTable.CLASS_DESC)
-                };
-
-                YAHOO.example.Data = {
-                    bookorders: [
-                        {id:"po-0167", date:new Date(1980, 2, 24), quantity:1, amount:4, title:"A Book About Nothing"},
-                        {id:"po-0783", date:new Date("January 3, 1983"), quantity:null, amount:12.12345, title:"The Meaning of Life"},
-                        {id:"po-0297", date:new Date(1978, 11, 12), quantity:12, amount:1.25, title:"This Book Was Meant to Be Read Aloud"},
-                        {id:"po-1482", date:new Date("March 11, 1985"), quantity:6, amount:3.5, title:"Read Me Twice"}
-                    ]
-                };
-                var aReturn = -1, bReturn = 1;
-                if (sortDir == 'desc') {
-                    aReturn = 1;
-                    bReturn = -1;
-                }
-                YAHOO.example.Data.bookorders.sort(function(a, b) {
-                    var A = a[sortCol], B = b[sortCol];
-                    if (A < B) {//sort string ascending
-                        return aReturn;
-                    }
-                    if (A > B) {
-                        return bReturn;
-                    }
-                    return 0 //default return value (no sorting)
-                });
-                
-                
-                var myColumnDefs = [
-                    { key: "id", sortable: true },
-                    { key: "date", formatter: YAHOO.widget.DataTable.formatDate, sortable: true },
-                    { key: "quantity", formatter: YAHOO.widget.DataTable.formatNumber, sortable: true },
-                    { key: "amount", formatter: YAHOO.widget.DataTable.formatCurrency, sortable: true },
-                    { key: "title", sortable: true }
-                ];
-
-                Y.log('Creating DataSource..');
-
-                var myDataSource = new YAHOO.util.DataSource(YAHOO.example.Data.bookorders);
-                myDataSource.responseType = YAHOO.util.DataSource.TYPE_JSARRAY;
-                
-                myDataSource.responseSchema = {
-                    fields: [ "id", "date", "quantity", "amount", "title" ]
-                };
-
-                Y.log('Creating DataTable..');
-
-
-                var myDataTable = new YAHOO.widget.DataTable("basic", myColumnDefs, myDataSource, config);
-                myDataTable.on('renderEvent', function() {
-                    var headers = page.all('#basic thead th a'),
-                    dir = ((sortDir == 'desc') ? 'asc' : 'desc');
-
-                    headers.each(function(n) {
-                        var col = n.get('href').replace('yui-dt0-href-', '');
-                        n.set('href', '/datatable?col=' + col + '&dir=' + dir);
-                    });
-
-                    res.render('datatable.html', {
-                        locals: {
-                            instance: page,
-                            content: '#content',
-                            sub: {
-                                title: 'YUI/Express JS Demo'
-                            },
-                            after: function(Y, options, partial) {
-                                Y.one('title').set('innerHTML', 'YUI 2 Datatable');
-                                Y.all('#nav li').removeClass('selected');
-                                Y.one('#nav li.datatable').addClass('selected');
-                            }
-                        }
-                    });
-                    
-                });
-            });        
         });        
     });
 
@@ -347,14 +306,13 @@ YUI({ debug: false }).use('express', 'node', function(Y) {
     });
 
     app.get('/notice', function(req, res) {
-        res.render('index.html', {
+        res.render('notice.html', {
             locals: {
                 content: '#content',
                 sub: {
                     title: 'This is a notice'
                 },
                 after: function(Y) {
-                    Y.one('#content').set('innerHTML', '<h1>Hello World, how are you?</h1>');
                     Y.one('#nav').remove();
                     Y.one('#doc').replaceClass('yui-t1', 'yui-t7');
                 }
@@ -426,13 +384,26 @@ YUI({ debug: false }).use('express', 'node', function(Y) {
         }
         
         YUI({ debug: DEBUG }).use('yql', 'node', function(page) {
-            var title = 'Github Followers';
+            var title = 'Github YUI Followers';
             page.YQL(sql, function(r) {
                 if (r.query.results.user) {
                     var parts = res.partial('github_member.html');
                     title = r.query.results.user.name;
                     parts = page.Lang.sub(parts, r.query.results.user);
                     page.one('body').append(parts);
+                    var lis = page.all('#member li');
+                    lis.each(function(n) {
+                        //Need a sub method that fixes this stuff...
+                        if (n.get('innerHTML').indexOf('Object') > -1) {
+                            n.remove();
+                        }
+                        if (n.get('innerHTML').indexOf('{') > -1) {
+                            n.remove();
+                        }
+                        if (n.get('innerHTML').indexOf('null') > -1) {
+                            n.remove();
+                        }
+                    });
                 } else {
                     var parts = res.partial('github_list.html');
                     var ul = page.Node.create('<ul></ul>');

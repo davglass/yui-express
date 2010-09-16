@@ -3,7 +3,7 @@ body, html {
 }
 
 #hd {
-    background-color: #640CAB;
+    background-color: #22252A;
     padding: 1em;
     border: 1px solid black;
     border-radius: 5px;
@@ -22,8 +22,9 @@ body, html {
     
 }
 
-a {
-    color: #640cab;
+#ft {
+    margin-top: 10px;
+    font-size: 80%;
 }
 
 .digg #content ul {
@@ -43,7 +44,7 @@ a {
 #nav a {
     display: block;
     border: 1px solid black;
-    background-color: #640cab;
+    background-color: #22252A;
     color: #ccc;
     margin: 5px;
     padding: 3px;
