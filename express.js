@@ -463,7 +463,10 @@ YUI({ debug: false }).use('express', 'node', function(Y) {
     });
 
 
-    app.listen(3000);
+    app.listen(3200);
+    if (DEBUG) {
+        console.log('Server running at: http://localhost:3200/');
+    }
 
 });
     
