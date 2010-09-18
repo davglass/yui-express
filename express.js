@@ -127,7 +127,7 @@ YUI({ debug: false }).use('express', 'node', function(Y) {
                 * the total layout, after all the peices have been assembled.
                 */
                 after: function(Y, options, partial) {
-                    Y.one('title').set('innerHTML', 'Home Page: Hello Word');
+                    Y.one('title').set('innerHTML', 'YUI/Express JS Demo');
                 }
             }
         });
