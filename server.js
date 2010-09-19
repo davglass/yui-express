@@ -26,6 +26,9 @@ YUI({ debug: false }).use('express', 'node', function(Y) {
         app.use(express.bodyDecoder());
         app.use(express.cookieDecoder());        
         app.use(app.router);
+        app.use(express.conditionalGet());
+        app.use(express.cache());
+        app.use(express.gzip());        
         app.use(express.staticProvider(__dirname + '/assets'));
     });
     

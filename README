@@ -13,7 +13,7 @@ To use it, follow these simple steps:
     cd yui-express
 
 For a normal run:
-    ./express.js
+    ./server.js
 
 Visit: http://localhost:3200/
 
