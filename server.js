@@ -10,16 +10,15 @@ var express = require('express'),
     YUI = require('yui3').YUI,
     DEBUG = true;
 
-
+   
+//Create the express application and allow the use of Spark (http://github.com/senchalabs/spark)
+var app = module.exports = express.createServer();
 /**
 * Create the external instance that will host our "express" server.
 * For a performance gain, you can "use" common modules here, so they 
 * are available when a new instance is created per request.
 */
 YUI({ debug: false }).use('express', 'node', function(Y) {
-    
-    //Create the express application
-    var app = express.createServer();
     
     //Configure it with some simple configuration options.
     app.configure(function(){
