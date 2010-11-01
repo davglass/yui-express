@@ -90,7 +90,7 @@ YUI({ debug: true }).use('express', 'node', function(Y) {
             node: 'head'
         },
         {
-            test: function(Y) {
+            test: function(Y, options) {
                 return (Y.UA.mobile);
             },
             name: 'mobile',
@@ -444,11 +444,20 @@ YUI({ debug: true }).use('express', 'node', function(Y) {
         });
     });
 
-    app.get('/full', YUI.express({ render: 'full.html', locals: {} }), function(req, res, next) {
-        req.Y.one('doc').set('title', TITLE + ' :: Full Page Test');
-        req.Y.one('#nav li.full').addClass('selected');
+    app.get('/pre', YUI.express({ render: 'pre.html', locals: {} }), function(req, res, next) {
+        req.Y.one('doc').set('title', TITLE + ' :: Pre-Render Layout');
+        req.Y.one('#nav li.pre').addClass('selected');
         res.sub({
-            title: 'Full Page Test'
+            title: 'Pre-Render Layout'
+        });
+        res.send();
+    });
+
+    app.get('/ua', YUI.express({ render: 'ua.html', locals: {} }), function(req, res, next) {
+        req.Y.one('doc').set('title', TITLE + ' :: Dynamic Partials');
+        req.Y.one('#nav li.ua').addClass('selected');
+        res.sub({
+            title: 'Dynamic Partials'
         });
         res.send();
     });

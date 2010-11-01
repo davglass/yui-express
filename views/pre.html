@@ -1,0 +1,8 @@
+<h2>Pre-Render Example</h2>
+
+<p>This page uses the new YUI/Express <strong>middleware</strong> for "pre-rendering".</p>
+<p>As you will note in the code below, during the request we will call <code>res.render()</code> on the
+file passed into the middleware. Then create a <code>YUI</code> instance from that layout and attach
+it to the res/req objects. This allows you to have an active DOM inside your request handler.</p>
+
+<script src="http://gist.github.com/657453.js?file=gistfile1.js"></script>
