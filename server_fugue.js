@@ -9,20 +9,22 @@ var fugue = require('fugue'),
     path = require('path'),
     fs = require('fs'),
     YUI = require('yui3').YUI,
-    DEBUG = false;
+    TITLE = 'YUI/Express JS Demo',
+    DEBUG = true;
 
    
-//Create the express application and allow the use of Fugue (http://github.com/pgte/fugue)
+//Create the express application and allow the use of Spark (http://github.com/senchalabs/spark)
 var app = module.exports = express.createServer();
 /**
 * Create the external instance that will host our "express" server.
 * For a performance gain, you can "use" common modules here, so they 
 * are available when a new instance is created per request.
 */
-YUI({ debug: false }).use('express', 'node', function(Y) {
+YUI({ debug: true }).use('express', 'node', function(Y) {
     
     //Configure it with some simple configuration options.
     app.configure(function(){
+        //app.use(YUI.express);
         app.use(express.methodOverride());
         app.use(express.bodyDecoder());
         app.use(express.cookieDecoder());        
@@ -87,6 +89,18 @@ YUI({ debug: false }).use('express', 'node', function(Y) {
         {
             name: 'layout_head',
             node: 'head'
+        },
+        {
+            test: function(Y) {
+                return (Y.UA.mobile);
+            },
+            name: 'mobile',
+            node: 'head'
+        },
+        {
+            ua: 'webkit',
+            name: 'webkit',
+            node: 'head'
         }
     ];
 
@@ -122,7 +136,7 @@ YUI({ debug: false }).use('express', 'node', function(Y) {
                 * instance on render.
                 */
                 sub: {
-                    title: 'YUI/Express JS Demo'
+                    title: TITLE
                 },
                 /**
                 * The after method will be invoked after the layout.html file
@@ -130,7 +144,8 @@ YUI({ debug: false }).use('express', 'node', function(Y) {
                 * the total layout, after all the peices have been assembled.
                 */
                 after: function(Y, options, partial) {
-                    Y.one('title').set('innerHTML', 'YUI/Express JS Demo');
+                    Y.one('title').set('innerHTML', TITLE);
+                    Y.one('#nav li.home').addClass('selected');
                 }
             }
         });
@@ -147,7 +162,7 @@ YUI({ debug: false }).use('express', 'node', function(Y) {
             locals: {
                 content: '#content',
                 sub: {
-                    title: 'YUI/Express JS Demo'
+                    title: TITLE
                 },
                 /**
                 * The before method is similar to the "after" method, only it's action is to
@@ -159,9 +174,7 @@ YUI({ debug: false }).use('express', 'node', function(Y) {
                 },
                 after: function(Y, options, partial) {
                     //Set the title of the page
-                    Y.one('title').set('innerHTML', 'Page #1');
-                    //Update the nav and remove all selected nav items
-                    Y.all('#nav li').removeClass('selected');
+                    Y.one('title').set('innerHTML', TITLE + ' :: Page #1');
                     //Grab the one for page one and add selected.
                     Y.one('#nav li.one').addClass('selected');
                 }
@@ -174,14 +187,13 @@ YUI({ debug: false }).use('express', 'node', function(Y) {
             locals: {
                 content: '#content',
                 sub: {
-                    title: 'YUI/Express JS Demo'
+                    title: TITLE
                 },
                 before: function(Y) {
                     Y.one('h1').set('innerHTML', 'Welcome to Page #2');
                 },
                 after: function(Y, options, partial) {
-                    Y.one('title').set('innerHTML', 'Page #2');
-                    Y.all('#nav li').removeClass('selected');
+                    Y.one('title').set('innerHTML', TITLE + ' :: Page #2');
                     Y.one('#nav li.two').addClass('selected');
                 }
             }
@@ -193,14 +205,13 @@ YUI({ debug: false }).use('express', 'node', function(Y) {
             locals: {
                 content: '#content',
                 sub: {
-                    title: 'YUI/Express JS Demo'
+                    title: TITLE
                 },
                 before: function(Y) {
                     Y.one('h1').set('innerHTML', 'Welcome to Page #3');
                 },
                 after: function(Y, options, partial) {
-                    Y.one('title').set('innerHTML', 'Page #3');
-                    Y.all('#nav li').removeClass('selected');
+                    Y.one('title').set('innerHTML', TITLE + ' :: Page #3');
                     Y.one('#nav li.three').addClass('selected');
                 }
             }
@@ -257,11 +268,10 @@ YUI({ debug: false }).use('express', 'node', function(Y) {
                         instance: page,
                         content: '#content',
                         sub: {
-                            title: 'YUI/Express JS Demo'
+                            title: TITLE
                         },
                         after: function(Y, options, partial) {
-                            Y.one('title').set('innerHTML', 'Digg Scrapping');
-                            Y.all('#nav li').removeClass('selected');
+                            Y.one('title').set('innerHTML', TITLE + ' :: Digg Scrapping');
                             Y.one('#nav li.digg').addClass('selected');
                         }
                     }
@@ -318,6 +328,7 @@ YUI({ debug: false }).use('express', 'node', function(Y) {
                 after: function(Y) {
                     Y.one('#nav').remove();
                     Y.one('#doc').replaceClass('yui-t1', 'yui-t7');
+                    Y.one('title').set('innerHTML', TITLE + ' :: Full Page Notice');
                 }
             }
         });
@@ -367,12 +378,11 @@ YUI({ debug: false }).use('express', 'node', function(Y) {
                     //filter: 'debug',
                     content: '#content',
                     sub: {
-                        title: 'YUI/Express JS Demo'
+                        title: TITLE
                     },
                     after: function(Y, options, partial) {
                         Y.Get.domScript('/tabview.js');
-                        Y.one('title').set('innerHTML', 'YUI 3.x TabView');
-                        Y.all('#nav li').removeClass('selected');
+                        Y.one('title').set('innerHTML', TITLE + ' :: YUI 3.x TabView');
                         Y.one('#nav li.tabview').addClass('selected');
                     }
                 }
@@ -424,9 +434,8 @@ YUI({ debug: false }).use('express', 'node', function(Y) {
                             title: 'YUI3 Github Network'
                         },
                         after: function(Y) {
-                            Y.one('title').set('innerHTML', 'YUI3 Github Network');
+                            Y.one('title').set('innerHTML', TITLE + ' :: YUI3 Github Network');
                             Y.one('#content h1').set('innerHTML', title);
-                            Y.all('#nav li').removeClass('selected');
                             Y.one('#nav li.github').addClass('selected');
                         }
                     }
@@ -435,8 +444,17 @@ YUI({ debug: false }).use('express', 'node', function(Y) {
 
         });
     });
+
+    app.get('/full', YUI.express({ render: 'full.html', locals: {} }), function(req, res, next) {
+        req.Y.one('doc').set('title', TITLE + ' :: Full Page Test');
+        req.Y.one('#nav li.full').addClass('selected');
+        res.sub({
+            title: 'Full Page Test'
+        });
+        res.send();
+    });
+
 });
- 
 
 fugue.start(app, 3200, null, 10, { daemonize: true, working_path: __dirname, verbose: false, master_pid_path: '/tmp/yui-express.pid' });
- 
+
