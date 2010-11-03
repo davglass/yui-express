@@ -1,0 +1,12 @@
+#nagbar {
+    border-bottom: 2px solid black;
+    padding: 5px;
+    background-color: #663300;
+    font-weight: bold;
+    color: #fff;
+    font-size: 120%;
+}
+
+#nagbar a {
+    color: #fff;
+}

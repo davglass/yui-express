@@ -100,6 +100,24 @@ YUI({ debug: true }).use('express', 'node', function(Y) {
             ua: 'webkit',
             name: 'webkit',
             node: 'head'
+        },
+        {
+            test: function(Y, options) {
+                var u = Y.UA;
+                if (u.ie && u.ie < 8) {
+                    return true;
+                }
+                if (options.scope.originalUrl === '/nag') {
+                    return true;
+                }
+                return false;
+            },
+            name: 'nag',
+            node: 'body',
+            method: 'prepend',
+            fn: function(Y) {
+                Y.Get.css('/nag.css');
+            }
         }
     ];
 
@@ -458,6 +476,15 @@ YUI({ debug: true }).use('express', 'node', function(Y) {
         req.Y.one('#nav li.ua').addClass('selected');
         res.sub({
             title: 'Dynamic Partials'
+        });
+        res.send();
+    });
+
+    app.get('/nag', YUI.express({ render: 'nag.html', locals: {} }), function(req, res, next) {
+        req.Y.one('doc').set('title', TITLE + ' :: Nag Bar');
+        req.Y.one('#nav li.nag').addClass('selected');
+        res.sub({
+            title: 'Nag Bar'
         });
         res.send();
     });
