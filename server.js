@@ -5,6 +5,7 @@
 process.chdir(__dirname);
 
 var express = require('express'),
+    extras = require('express-extras'),
     path = require('path'),
     fs = require('fs'),
     YUI = require('yui3').YUI,
@@ -24,14 +25,20 @@ YUI({ debug: true }).use('express', 'node', function(Y) {
     //Configure it with some simple configuration options.
     app.configure(function(){
         //app.use(YUI.express);
+
+        app.use(extras.fixIP());
+        app.use(extras.throttle({ holdTime: 5 }));
+
+        app.use(express.favicon(__dirname + '/assets/favicon.ico'));
+        app.use(express.logger({ stream: fs.createWriteStream(__dirname + '/logs/access' + process.pid + '.log') }));
         app.use(express.methodOverride());
         app.use(express.bodyDecoder());
         app.use(express.cookieDecoder());        
-        app.use(app.router);
         app.use(express.conditionalGet());
         app.use(express.cache());
         app.use(express.gzip());        
         app.use(express.staticProvider(__dirname + '/assets'));
+        app.use(app.router);
     });
     
     //Set the development environment to debug, so YUI modues echo log statements
