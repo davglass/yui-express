@@ -30,7 +30,7 @@ YUI({ debug: true }).use('express', 'node', function(Y) {
         app.use(extras.throttle({ holdTime: 5 }));
 
         app.use(express.favicon(__dirname + '/assets/favicon.ico'));
-        app.use(express.logger({ stream: fs.createWriteStream(__dirname + '/logs/access' + process.pid + '.log') }));
+        app.use(express.logger());
         app.use(express.methodOverride());
         app.use(express.bodyDecoder());
         app.use(express.cookieDecoder());        
@@ -496,11 +496,14 @@ YUI({ debug: true }).use('express', 'node', function(Y) {
         res.send();
     });
 
-
-    app.listen(3200);
-    if (DEBUG) {
-        console.log('Server running at: http://localhost:3200/');
-    }
+    setTimeout(function() {
+        if (!app.isChild) { //From spark2
+            app.listen(3200);
+            if (DEBUG) {
+                console.log('Server running at: http://localhost:3200/');
+            }
+        }
+    }, 500);
 
 });
     
