@@ -20,7 +20,7 @@ var app = module.exports = express.createServer();
 * For a performance gain, you can "use" common modules here, so they 
 * are available when a new instance is created per request.
 */
-YUI({ debug: true }).use('express', 'node', function(Y) {
+YUI({ debug: false }).use('express', 'node', function(Y) {
     
     //Configure it with some simple configuration options.
     app.configure(function(){

@@ -18,11 +18,11 @@ For a normal run:
 
 Visit: http://localhost:3200/
 
-To use Spark: http://github.com/senchalabs/spark
+To use Spark2: http://github.com/davglass/spark2
 
-Install spark via:
+Install spark2 via:
 
-    npm install spark
-    spark
+    npm install spark2
+    spark2
 
 Visit: http://localhost:3200/
