@@ -415,9 +415,9 @@ YUI({ debug: false }).use('express', 'node', function(Y) {
     });
 
     app.get('/github/:id?', function(req, res) {
-        var sql = "select * from github.repo.network where id='yui' and repo='yui3'";
+        var sql = 'select * from github.repo.network where id="yui" and repo="yui3"';
         if (req.params.id) {
-            sql = Y.Lang.sub("select * from github.user.info where id='{id}'", req.params);
+            sql = Y.Lang.sub('select * from github.user.info where id="{id}"', req.params);
         }
         
         YUI({ debug: DEBUG }).use('yql', 'node', function(page) {

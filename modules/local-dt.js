@@ -81,7 +81,8 @@ YUI.add('local-dt', function(Y) {
                 dir = ((sortDir == 'desc') ? 'asc' : 'desc');
 
                 headers.each(function(n) {
-                    var col = n.get('href').replace('yui-dt0-href-', '');
+                    var col = n.get('href').split('-');
+                    col = col[col.length - 1];
                     n.set('href', '/datatable?col=' + col + '&dir=' + dir);
                 });
 
