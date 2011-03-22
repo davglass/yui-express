@@ -20,7 +20,7 @@ var app = module.exports = express.createServer();
 * For a performance gain, you can "use" common modules here, so they 
 * are available when a new instance is created per request.
 */
-YUI({ debug: false }).use('express', 'node', function(Y) {
+YUI({ debug: true }).use('express', 'node', function(Y) {
     
     //Configure it with some simple configuration options.
     app.configure(function(){
@@ -32,12 +32,24 @@ YUI({ debug: false }).use('express', 'node', function(Y) {
         app.use(express.favicon(__dirname + '/assets/favicon.ico'));
         app.use(express.logger());
         app.use(express.methodOverride());
-        app.use(express.bodyDecoder());
-        app.use(express.cookieDecoder());        
-        app.use(express.conditionalGet());
-        app.use(express.cache());
-        app.use(express.gzip());        
-        app.use(express.staticProvider(__dirname + '/assets'));
+        if (express.bodyDecoder) {
+            app.use(express.bodyDecoder());
+            app.use(express.cookieDecoder());        
+            app.use(express.conditionalGet());
+            app.use(express.cache());
+            app.use(express.gzip());
+            app.use(express.staticProvider(__dirname + '/assets'));
+        } else {
+            app.use(function(req, res, next) {
+                res.partial = function(name) {
+                    return fs.readFileSync(path.join(__dirname, 'views', 'partials', name), encoding='utf8');
+                };
+                next();
+            });
+            app.use(express.bodyParser());
+            app.use(express.cookieParser());        
+            app.use(express.static(__dirname + '/assets'));
+        }
         app.use(app.router);
     });
     
@@ -419,7 +431,6 @@ YUI({ debug: false }).use('express', 'node', function(Y) {
         if (req.params.id) {
             sql = Y.Lang.sub('select * from github.user.info where id="{id}"', req.params);
         }
-        
         YUI({ debug: DEBUG }).use('yql', 'node', function(page) {
             var title = 'Github YUI Followers';
             page.YQL(sql, function(r) {
