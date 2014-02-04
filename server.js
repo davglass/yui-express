@@ -4,6 +4,8 @@
 //Change directory into the script directory so includes resolve
 process.chdir(__dirname);
 
+require.paths.unshift(__dirname + '/node_modules');
+
 var express = require('express'),
     extras = require('express-extras'),
     path = require('path'),

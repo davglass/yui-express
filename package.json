@@ -1,0 +1,17 @@
+{
+  "name": "yui-express",
+  "description": "yui-express sample app",
+  "version": "0.0.1",
+  "homepage": "http://express.davglass.com",
+  "repository": "http://github.com/davglass/yui-express.git",
+  "author": "Dav Glass <davglass@gmail.com> (http://blog.davglass.com)",
+  "dependencies": {
+      "express": "1.0.7"
+    , "connect": "0.5.7"
+    , "yui3": "0.5.30"
+    , "yui3-gallery": "2011.01.12"
+    , "yui3-2in3": "0.0.3"
+    , "express-extras": "0.1.0"
+  },
+  "engines": { "node": ">= 0.4.2" }
+}

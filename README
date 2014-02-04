@@ -4,14 +4,9 @@ You must have git, NodeJS 0.2.4 and npm 0.2.0+ installed
 
 To use it, follow these simple steps:
 
-    npm install yui3
-    npm install yui3-gallery
-    npm install yui3-2in3
-    npm install express-extras
-
     git clone git://github.com/davglass/yui-express.git
-
     cd yui-express
+    make npm
 
 For a normal run:
     ./server.js
